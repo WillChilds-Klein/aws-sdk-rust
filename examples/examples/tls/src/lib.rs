@@ -11,46 +11,21 @@ Then, uses TLS 1.3 to make a sample call to AWS Key Management Service (AWS KMS)
 This example assumes you have set up environment variables for authentication.
 
 */
-use std::sync::Arc;
+//use aws_config::BehaviorVersion;
+use aws_smithy_runtime_api::client::behavior_version::BehaviorVersion;
+//use aws_sdk_kms::Error;
 
-use aws_config::BehaviorVersion;
-use aws_sdk_kms::Error;
-use aws_smithy_runtime::client::http::hyper_014::HyperClientBuilder;
-use rustls::RootCertStore;
+use aws_smithy_experimental::hyper_1_0::{CryptoMode, HyperClientBuilder};
 
-// snippet-start:[rust.example_code.tls.ConnectWithTLS13]
-pub async fn connect_via_tls_13() -> Result<(), Error> {
+pub async fn connect_via_tls_13() -> Result<(), aws_sdk_kms::Error> {
     println!("Attempting to connect to KMS using TLS 1.3: ");
-
-    // Let webpki load the Mozilla root certificates.
-    let mut root_store = RootCertStore::empty();
-    //root_store.add_server_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.0.iter().map(|ta| {
-        //rustls::OwnedTrustAnchor::from_subject_spki_name_constraints(
-            //ta.subject,
-            //ta.spki,
-            //ta.name_constraints,
-        //)
-    //}));
 
     rustls_post_quantum::provider().install_default().unwrap();
 
-    // The .with_protocol_versions call is where we set TLS1.3. You can add rustls::version::TLS12 or replace them both with rustls::ALL_VERSIONS
-    let config = rustls::ClientConfig::builder_with_provider(Arc::new(rustls_post_quantum::provider()))
-        .with_protocol_versions(&[&rustls::version::TLS13])
-        .expect("It looks like your system doesn't support TLS1.3")
-        .with_root_certificates(root_store)
-        .with_no_client_auth();
-
-    // Finish setup of the rustls connector.
-    let rustls_connector = hyper_rustls::HttpsConnector::builder()
-        .with_tls_config(config)
-        .https_only()
-        .enable_http1()
-        .enable_http2()
-        .build();
-
-    // See https://github.com/awslabs/smithy-rs/discussions/3022 for the HyperClientBuilder
-    let http_client = HyperClientBuilder::new().build(rustls_connector);
+    // feature = crypto-aws-lc
+    let http_client = HyperClientBuilder::new()
+        .crypto_mode(CryptoMode::AwsLc)
+        .build_https();
 
     let shared_conf = aws_config::defaults(BehaviorVersion::latest())
         .http_client(http_client)
@@ -58,10 +33,12 @@ pub async fn connect_via_tls_13() -> Result<(), Error> {
         .await;
 
     let kms_client = aws_sdk_kms::Client::new(&shared_conf);
-    let response = kms_client.list_keys().send().await?;
+    let response = kms_client
+        .list_keys()
+        .send()
+        .await?;
 
     println!("{:?}", response);
 
     Ok(())
 }
-// snippet-end:[rust.example_code.tls.ConnectWithTLS13]

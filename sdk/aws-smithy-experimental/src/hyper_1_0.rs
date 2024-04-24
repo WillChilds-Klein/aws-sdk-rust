@@ -59,7 +59,13 @@ impl CryptoMode {
     fn provider(self) -> CryptoProvider {
         match self {
             #[cfg(feature = "crypto-aws-lc")]
-            CryptoMode::AwsLc => rustls::crypto::aws_lc_rs::default_provider(),
+            CryptoMode::AwsLc => CryptoProvider {
+                kx_groups: vec![
+                    &rustls_post_quantum::X25519Kyber768Draft00,
+                    rustls::crypto::aws_lc_rs::kx_group::X25519,
+                ],
+                ..rustls::crypto::aws_lc_rs::default_provider()
+            },
 
             #[cfg(feature = "crypto-ring")]
             CryptoMode::Ring => rustls::crypto::ring::default_provider(),
