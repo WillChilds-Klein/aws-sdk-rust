@@ -63,10 +63,6 @@ version = "1.2.1"
 version = "1"
 features = ["client", "http1", "http2"]
 
-
-[dependencies.rustls-post-quantum]
-version = "0.1.0"
-
 [dependencies.hyper-rustls]
 version = "0.27"
 features = ["http2", "http1", "native-tokio", "tls12"]
