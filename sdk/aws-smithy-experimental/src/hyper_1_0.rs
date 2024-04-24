@@ -53,18 +53,13 @@ pub enum CryptoMode {
     AwsLc,
     #[cfg(feature = "crypto-aws-lc-fips")]
     AwsLcFips,
-    #[cfg(feature = "crypto-pq")]
-    PQ,
 }
 
 impl CryptoMode {
     fn provider(self) -> CryptoProvider {
         match self {
             #[cfg(feature = "crypto-aws-lc")]
-            CryptoMode::AwsLc => rustls::crypto::aws_lc_rs::default_provider(),
-
-            #[cfg(feature = "crypto-pq")]
-            CryptoMode::PQ => CryptoProvider {
+            CryptoMode::AwsLc => CryptoProvider {
                 kx_groups: vec![
                     &rustls_post_quantum::X25519Kyber768Draft00,
                     rustls::crypto::aws_lc_rs::kx_group::X25519,
@@ -137,11 +132,6 @@ mod cached_connectors {
         HttpsConnector<HttpConnector>,
     > = once_cell::sync::Lazy::new(|| make_tls(GaiResolver::new(), CryptoMode::AwsLc.provider()));
 
-    #[cfg(feature = "crypto-pq")]
-    pub(crate) static HTTPS_NATIVE_ROOTS_AWS_PQ: once_cell::sync::Lazy<
-        HttpsConnector<HttpConnector>,
-    > = once_cell::sync::Lazy::new(|| make_tls(GaiResolver::new(), CryptoMode::PQ.provider()));
-
     #[cfg(feature = "crypto-aws-lc-fips")]
     pub(crate) static HTTPS_NATIVE_ROOTS_AWS_LC_FIPS: once_cell::sync::Lazy<
         HttpsConnector<HttpConnector>,
@@ -155,8 +145,6 @@ mod cached_connectors {
             Inner::Standard(CryptoMode::Ring) => HTTPS_NATIVE_ROOTS_RING.clone(),
             #[cfg(feature = "crypto-aws-lc")]
             Inner::Standard(CryptoMode::AwsLc) => HTTPS_NATIVE_ROOTS_AWS_LC.clone(),
-            #[cfg(feature = "crypto-pq")]
-            Inner::Standard(CryptoMode::PQ) => HTTPS_NATIVE_ROOTS_AWS_PQ.clone(),
             #[cfg(feature = "crypto-aws-lc-fips")]
             Inner::Standard(CryptoMode::AwsLcFips) => HTTPS_NATIVE_ROOTS_AWS_LC_FIPS.clone(),
             #[allow(unreachable_patterns)]

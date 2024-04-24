@@ -6,7 +6,7 @@ doc-scrape-examples = true
 
 [[example]]
 name = "client-aws-lc"
-required-features = ["crypto-aws-lc", "crypto-aws-lc-fips", "crypto-pq"]
+required-features = ["crypto-aws-lc", "crypto-aws-lc-fips"]
 doc-scrape-examples = true
 
 [[example]]
@@ -34,7 +34,6 @@ normal = ["fs_extra"]
 crypto-ring = ["rustls/ring"]
 crypto-aws-lc = ["rustls/aws_lc_rs"]
 crypto-aws-lc-fips = ["rustls/fips"]
-crypto-pq = ["crypto-aws-lc"]
 
 [dependencies]
 pin-project-lite = "0.2.13"
