@@ -6,7 +6,7 @@ Purpose
 
 Shows how to use rustls, hyper-rustls, and webpki-roots to set the minimum TLS version to 1.3 for
 outgoing connections.
-Then, uses TLS 1.3 to make a sample call to AWS Key Management Service (AWS KMS) as proof of concept.
+Then, uses TLS 1.3 to make a sample call to AWS SecretsManager as proof of concept.
 
 This example assumes you have set up environment variables for authentication.
 
@@ -15,8 +15,8 @@ use aws_config::BehaviorVersion;
 
 use aws_smithy_experimental::hyper_1_0::{CryptoMode, HyperClientBuilder};
 
-pub async fn connect_via_tls_13() -> Result<(), aws_sdk_kms::Error> {
-    println!("Attempting to connect to KMS using TLS 1.3: ");
+pub async fn connect_via_tls_13() -> Result<(), aws_sdk_secretsmanager::Error> {
+    println!("Attempting to connect to SecretsManager using TLS 1.3: ");
 
     rustls_post_quantum::provider().install_default().unwrap();
 
@@ -29,8 +29,8 @@ pub async fn connect_via_tls_13() -> Result<(), aws_sdk_kms::Error> {
         .load()
         .await;
 
-    let kms_client = aws_sdk_kms::Client::new(&shared_conf);
-    let response = kms_client.list_keys().send().await?;
+    let client = aws_sdk_secretsmanager::Client::new(&shared_conf);
+    let response = client.list_secrets().send().await?;
 
     println!("{:?}", response);
 
